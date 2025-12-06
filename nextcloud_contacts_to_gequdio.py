@@ -14,7 +14,6 @@ import configparser
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from urllib.parse import urljoin
-from xml.dom import minidom
 
 # Third Party
 import requests
@@ -76,7 +75,7 @@ class NextcloudWebDAVClient:
     Minimal WebDAV client for Nextcloud Contacts.
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         url: str,
         username: str,
@@ -293,63 +292,48 @@ class NextcloudWebDAVClient:
         :rtype: str
         """
 
-        root = ET.Element("GEQUDIODirectory")
+        root_node = ET.Element("GEQUDIODirectory")
 
         # sort contacts by full name (case-insensitive) before processing
-        sorted_vcards = sorted(
-            vcard_list, key=lambda v: self._parse_vcard(v)[0].lower()
-        )
-
-        for vcard in sorted_vcards:
+        for vcard in sorted(vcard_list, key=lambda v: self._parse_vcard(v)[0].lower()):
             contact_name, tels = self._parse_vcard(vcard)
 
-            entry_contact = ET.SubElement(root, "DirectoryEntry")
-            name_el = ET.SubElement(entry_contact, "Name")
-            name_el.text = contact_name
+            contact_node = ET.SubElement(root_node, "DirectoryEntry")
+            ET.SubElement(contact_node, "Name").text = contact_name
 
             print(
                 f"Processing contact: {contact_name} with {len(tels)} telephone entries."
             )
 
             for number, types in tels:
-                types_set = {t.lower() for t in types}
-                phone_groups = {
-                    "Telephone": {"work", "desk", "office", "home"},
-                    "Mobile": {"cell", "mobile"},
-                }
                 tag = next(
                     (
                         group
-                        for group, keywords in phone_groups.items()
-                        if types_set & keywords
+                        for group, keywords in (
+                            ("Telephone", {"work", "desk", "office", "home"}),
+                            ("Mobile", {"cell", "mobile"}),
+                        )
+                        if {t.strip().lower() for t in types} & keywords
                     ),
                     "Other",
                 )
 
                 # ensure all possible nodes exist (create empty ones if missing)
                 for _tag in ("Telephone", "Mobile", "Other"):
-                    if entry_contact.find(_tag) is None:
-                        ET.SubElement(entry_contact, _tag)
+                    if contact_node.find(_tag) is None:
+                        ET.SubElement(contact_node, _tag)
 
-                # place number: if the target tag already has text, create an additional element
-                el = entry_contact.find(tag)
-
-                if el is None or (el is not None and el.text):
-                    el = ET.SubElement(entry_contact, tag)
-
+                el = contact_node.find(tag)
+                if el is None or el.text:
+                    el = ET.SubElement(contact_node, tag)
                 el.text = number
 
-        # produce pretty XML and add required XML declaration with standalone="yes"
-        raw = ET.tostring(root, encoding="utf-8")
-        dom = minidom.parseString(raw)
-        pretty = dom.toprettyxml(indent="    ")  # 4 spaces indent
-        # remove minidom xml declaration
-        lines = pretty.splitlines()
-        body = (
-            "\n".join(lines[1:]) if lines and lines[0].startswith("<?xml") else pretty
+        xml_body = ET.tostring(root_node, encoding="utf-8").decode("utf-8")
+        xml_str = (
+            '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            + xml_body
+            + "\n"
         )
-        header = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-        xml_str = header + body + "\n"
 
         if write_path:
             Path(write_path).write_text(xml_str, encoding="utf-8")
@@ -358,7 +342,7 @@ class NextcloudWebDAVClient:
 
 
 if __name__ == "__main__":
-    # example usage: requires a settings.ini file in same folder
+    # Load settings from INI file
     cfg = load_settings(str(Path(__file__).parent / "settings.ini"))
 
     client = NextcloudWebDAVClient(
@@ -370,7 +354,7 @@ if __name__ == "__main__":
     )
     contacts = client.download_all_contacts()
 
-    # print(f"Fetched {len(contacts)} contacts from Nextcloud.")
+    print(f"Fetched {len(contacts)} contacts from Nextcloud.\n")
 
     gequdio_xml = client.create_gequdio_contact_xml(
         contacts, write_path=str(Path(__file__).parent / "gequdio.xml")

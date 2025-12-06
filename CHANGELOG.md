@@ -41,6 +41,7 @@ Section Order:
 - Makefile configuration
 - Changelog file
 - Isort configuration
+- Pylint configuration
 
 ### Changed
 

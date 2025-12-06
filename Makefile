@@ -72,6 +72,11 @@ prepare-release:
 		echo "Updated version in $(TEXT_BOLD)README.md$(TEXT_BOLD_END)"; \
 	fi;
 
+PHONY: run
+run: check-python-venv
+	@echo "Running $(appname_verbose) …"
+	@python nextcloud_contacts_to_gequdio.py
+
 # Help
 .PHONY: help
 help::
