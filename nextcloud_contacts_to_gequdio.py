@@ -9,16 +9,18 @@ Requirements:
 
 """
 
+# Standard Library
 import configparser
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from urllib.parse import urljoin
 from xml.dom import minidom
 
+# Third Party
 import requests
 from requests.auth import HTTPBasicAuth
 
-APP_VERSION = "1.0"
+APP_VERSION = "1.0.0"
 
 
 def _get_user_agent() -> str:
@@ -55,11 +57,16 @@ def load_settings(path: str) -> dict:
 
     section = config["nextcloud"]
 
+    # Set default addressbook if not provided
+    addressbook = section.get("addressbook", fallback="contacts")
+    if addressbook is None or not addressbook.strip():
+        addressbook = "contacts"
+
     return {
         "url": section.get("url"),
         "username": section.get("user"),
         "password": section.get("password"),
-        "addressbook": section.get(option="addressbook", fallback="contacts"),
+        "addressbook": addressbook,
         "verify_ssl": section.getboolean("verify_ssl", True),
     }
 
@@ -100,6 +107,58 @@ class NextcloudWebDAVClient:
         self.session.auth = HTTPBasicAuth(username=username, password=password)
         self.verify = verify_ssl
 
+    def _parse_vcard(self, vcard: str) -> tuple[str, list[tuple[str, list[str]]]]:
+        """
+        Parses a vCard string to extract the full name and telephone numbers with types.
+
+        :param vcard: vCard string
+        :type vcard: str
+        :return: Tuple of full name and list of (number, [types])
+        :rtype: Tuple[str, List[Tuple[str, List[str]]]]
+        """
+
+        def unfold_lines(vcard: str) -> list[str]:
+            """
+            Unfolds folded lines in a vCard string.
+
+            :param vcard: vCard string
+            :type vcard: str
+            :return: List of unfolded lines
+            :rtype: List[str]
+            """
+
+            lines = vcard.splitlines()
+            out = []
+
+            for line in lines:
+                if not line:
+                    continue
+
+                if line.startswith((" ", "\t")) and out:
+                    out[-1] += line.lstrip()
+                else:
+                    out.append(line)
+
+            return out
+
+        fn, tels = None, []
+
+        for line in unfold_lines(vcard):
+            if line.upper().startswith("FN:"):
+                fn = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("TEL"):
+                parts = line.split(":", 1)
+                number = parts[1].strip().split(":", 1)[-1]
+                types = [
+                    t.strip().lower()
+                    for t in parts[0].split(";")[1:]
+                    if "=" in t
+                    for t in t.split("=", 1)[1].split(",")
+                ]
+                tels.append((number, types))
+
+        return fn or "Unknown", tels
+
     def _propfind(self, depth: str = "1"):
         """
         Internal method to perform a PROPFIND request.
@@ -137,6 +196,30 @@ class NextcloudWebDAVClient:
         resp.raise_for_status()
 
         return resp.text
+
+    def _unfold_vcard_lines(self, vcard: str) -> list[str]:
+        """
+        Unfolds folded lines in a vCard string.
+
+        :param vcard: vCard string
+        :type vcard: str
+        :return: List of unfolded lines
+        :rtype: List[str]
+        """
+
+        lines = vcard.splitlines()
+        out = []
+
+        for line in lines:
+            if not line:
+                continue
+
+            if line[0] in (" ", "\t") and out:
+                out[-1] += line.lstrip()
+            else:
+                out.append(line)
+
+        return out
 
     def list_contacts(self) -> list[dict]:
         """
@@ -196,154 +279,82 @@ class NextcloudWebDAVClient:
             if "vcard" in (item.get("content_type", "").lower())
         ]
 
-
-def _unfold_vcard_lines(vcard: str) -> list[str]:
-    """
-    Unfolds folded lines in a vCard string.
-
-    :param vcard: vCard string
-    :type vcard: str
-    :return: List of unfolded lines
-    :rtype: List[str]
-    """
-
-    lines = vcard.splitlines()
-    out = []
-
-    for line in lines:
-        if not line:
-            continue
-        if line[0] in (" ", "\t") and out:
-            out[-1] += line.lstrip()
-        else:
-            out.append(line)
-
-    return out
-
-
-def _parse_vcard(vcard: str) -> tuple[str, list[tuple[str, list[str]]]]:
-    """
-    Parses a vCard string to extract the full name and telephone numbers with types.
-
-    :param vcard: vCard string
-    :type vcard: str
-    :return: Tuple of full name and list of (number, [types])
-    :rtype: Tuple[str, List[Tuple[str, List[str]]]]
-    """
-
-    def unfold_lines(vcard: str) -> list[str]:
+    def create_gequdio_contact_xml(
+        self, vcard_list: list[str], write_path: str | None = None
+    ) -> str:
         """
-        Unfolds folded lines in a vCard string.
+        Creates GEQUDIO contact XML from a list of vCard strings.
 
-        :param vcard: vCard string
-        :type vcard: str
-        :return: List of unfolded lines
-        :rtype: List[str]
+        :param vcard_list: List of vCard strings
+        :type vcard_list: List[str]
+        :param write_path: Optional path to write the XML file
+        :type write_path: Optional[str]
+        :return: GEQUDIO contact XML string
+        :rtype: str
         """
 
-        lines = vcard.splitlines()
-        out = []
+        root = ET.Element("GEQUDIODirectory")
 
-        for line in lines:
-            if not line:
-                continue
+        # sort contacts by full name (case-insensitive) before processing
+        sorted_vcards = sorted(
+            vcard_list, key=lambda v: self._parse_vcard(v)[0].lower()
+        )
 
-            if line.startswith((" ", "\t")) and out:
-                out[-1] += line.lstrip()
-            else:
-                out.append(line)
+        for vcard in sorted_vcards:
+            contact_name, tels = self._parse_vcard(vcard)
 
-        return out
+            entry_contact = ET.SubElement(root, "DirectoryEntry")
+            name_el = ET.SubElement(entry_contact, "Name")
+            name_el.text = contact_name
 
-    fn, tels = None, []
-
-    for line in unfold_lines(vcard):
-        if line.upper().startswith("FN:"):
-            fn = line.split(":", 1)[1].strip()
-        elif line.upper().startswith("TEL"):
-            parts = line.split(":", 1)
-            number = parts[1].strip().split(":", 1)[-1]
-            types = [
-                t.strip().lower()
-                for t in parts[0].split(";")[1:]
-                if "=" in t
-                for t in t.split("=", 1)[1].split(",")
-            ]
-            tels.append((number, types))
-
-    return fn or "Unknown", tels
-
-
-def create_gequdio_contact_xml(
-    vcard_list: list[str], write_path: str | None = None
-) -> str:
-    """
-    Creates GEQUDIO contact XML from a list of vCard strings.
-
-    :param vcard_list: List of vCard strings
-    :type vcard_list: List[str]
-    :param write_path: Optional path to write the XML file
-    :type write_path: Optional[str]
-    :return: GEQUDIO contact XML string
-    :rtype: str
-    """
-
-    root = ET.Element("GEQUDIODirectory")
-
-    # sort contacts by full name (case-insensitive) before processing
-    sorted_vcards = sorted(vcard_list, key=lambda v: _parse_vcard(v)[0].lower())
-
-    for vcard in sorted_vcards:
-        contact_name, tels = _parse_vcard(vcard)
-
-        entry_contact = ET.SubElement(root, "DirectoryEntry")
-        name_el = ET.SubElement(entry_contact, "Name")
-        name_el.text = contact_name
-
-        print(f"Processing contact: {contact_name} with {len(tels)} telephone entries.")
-
-        for number, types in tels:
-            types_set = {t.lower() for t in types}
-            phone_groups = {
-                "Telephone": {"work", "desk", "office", "home"},
-                "Mobile": {"cell", "mobile"},
-            }
-            tag = next(
-                (
-                    group
-                    for group, keywords in phone_groups.items()
-                    if types_set & keywords
-                ),
-                "Other",
+            print(
+                f"Processing contact: {contact_name} with {len(tels)} telephone entries."
             )
 
-            # ensure all possible nodes exist (create empty ones if missing)
-            for _tag in ("Telephone", "Mobile", "Other"):
-                if entry_contact.find(_tag) is None:
-                    ET.SubElement(entry_contact, _tag)
+            for number, types in tels:
+                types_set = {t.lower() for t in types}
+                phone_groups = {
+                    "Telephone": {"work", "desk", "office", "home"},
+                    "Mobile": {"cell", "mobile"},
+                }
+                tag = next(
+                    (
+                        group
+                        for group, keywords in phone_groups.items()
+                        if types_set & keywords
+                    ),
+                    "Other",
+                )
 
-            # place number: if the target tag already has text, create an additional element
-            el = entry_contact.find(tag)
+                # ensure all possible nodes exist (create empty ones if missing)
+                for _tag in ("Telephone", "Mobile", "Other"):
+                    if entry_contact.find(_tag) is None:
+                        ET.SubElement(entry_contact, _tag)
 
-            if el is None or (el is not None and el.text):
-                el = ET.SubElement(entry_contact, tag)
+                # place number: if the target tag already has text, create an additional element
+                el = entry_contact.find(tag)
 
-            el.text = number
+                if el is None or (el is not None and el.text):
+                    el = ET.SubElement(entry_contact, tag)
 
-    # produce pretty XML and add required XML declaration with standalone="yes"
-    raw = ET.tostring(root, encoding="utf-8")
-    dom = minidom.parseString(raw)
-    pretty = dom.toprettyxml(indent="    ")
-    # remove minidom xml declaration
-    lines = pretty.splitlines()
-    body = "\n".join(lines[1:]) if lines and lines[0].startswith("<?xml") else pretty
-    header = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
-    xml_str = header + body + "\n"
+                el.text = number
 
-    if write_path:
-        Path(write_path).write_text(xml_str, encoding="utf-8")
+        # produce pretty XML and add required XML declaration with standalone="yes"
+        raw = ET.tostring(root, encoding="utf-8")
+        dom = minidom.parseString(raw)
+        pretty = dom.toprettyxml(indent="    ")  # 4 spaces indent
+        # remove minidom xml declaration
+        lines = pretty.splitlines()
+        body = (
+            "\n".join(lines[1:]) if lines and lines[0].startswith("<?xml") else pretty
+        )
+        header = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+        xml_str = header + body + "\n"
 
-    return xml_str
+        if write_path:
+            Path(write_path).write_text(xml_str, encoding="utf-8")
+
+        return xml_str
 
 
 if __name__ == "__main__":
@@ -359,10 +370,8 @@ if __name__ == "__main__":
     )
     contacts = client.download_all_contacts()
 
-    print(f"Fetched {len(contacts)} contacts from Nextcloud.")
+    # print(f"Fetched {len(contacts)} contacts from Nextcloud.")
 
-    # print(contacts)
-
-    gequdio_xml = create_gequdio_contact_xml(
+    gequdio_xml = client.create_gequdio_contact_xml(
         contacts, write_path=str(Path(__file__).parent / "gequdio.xml")
     )
