@@ -61,7 +61,7 @@ prepare-release:
 		echo "[$$new_version]: $(git_repository)/compare/v$$previos_version...v$$new_version \"v$$new_version\"" >> CHANGELOG.md; \
 	fi; \
 	sed -i "/APP_VERSION = /c\APP_VERSION = \"$$new_version\"" nextcloud_contacts_to_gequdio.py; \
-	echo "Updated version in $(TEXT_BOLD)$(package)/__init__.py$(TEXT_BOLD_END)"; \
+	echo "Updated version in $(TEXT_BOLD)nextcloud_contacts_to_gequdio.py$(TEXT_BOLD_END)"; \
 	if [[ $$new_version =~ (alpha|beta) ]]; then \
 		echo "$(TEXT_COLOR_RED)$(TEXT_BOLD)Pre-release$(TEXT_RESET) version detected!"; \
 	elif [[ $$new_version =~ rc ]]; then \
@@ -90,7 +90,7 @@ help::
 	@echo "$(TEXT_BOLD)Commands:$(TEXT_BOLD_END)"
 	@echo "  $(TEXT_UNDERLINE)General:$(TEXT_UNDERLINE_END)"
 	@echo "    help                        Show this help message"
-	@echo "    prepare-release             Prepare a release and update the version in '$(package)/__init__.py'."
+	@echo "    prepare-release             Prepare a release and update the version in 'nextcloud_contacts_to_gequdio.py'."
 	@echo "                                Please make sure to update the 'CHANGELOG.md' file accordingly."
 	@echo ""
 
