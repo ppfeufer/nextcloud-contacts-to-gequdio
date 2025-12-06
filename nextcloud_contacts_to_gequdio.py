@@ -19,18 +19,7 @@ from urllib.parse import urljoin
 import requests
 from requests.auth import HTTPBasicAuth
 
-APP_VERSION = "1.0.0"
-
-
-def _get_user_agent() -> str:
-    """
-    Returns a default User-Agent string for HTTP requests.
-
-    :return: User-Agent string
-    :rtype: str
-    """
-
-    return f"NextcloudContactsToGEQUDIO/{APP_VERSION} (+https://github.com/ppfeufer/nextcloud-contacts-to-gequdio) via python-requests/{requests.__version__}"
+APP_VERSION = "1.1.0"
 
 
 def load_settings(path: str) -> dict:
@@ -106,6 +95,16 @@ class NextcloudWebDAVClient:
         self.session.auth = HTTPBasicAuth(username=username, password=password)
         self.verify = verify_ssl
 
+    def _get_user_agent(self) -> str:
+        """
+        Returns a default User-Agent string for HTTP requests.
+
+        :return: User-Agent string
+        :rtype: str
+        """
+
+        return f"NextcloudContactsToGEQUDIO/{APP_VERSION} (+https://github.com/ppfeufer/nextcloud-contacts-to-gequdio) via python-requests/{requests.__version__}"
+
     def _parse_vcard(self, vcard: str) -> tuple[str, list[tuple[str, list[str]]]]:
         """
         Parses a vCard string to extract the full name and telephone numbers with types.
@@ -177,7 +176,7 @@ class NextcloudWebDAVClient:
     </d:prop>
 </d:propfind>"""
         # ensure a User-Agent is present on the session
-        self.session.headers.update({"User-Agent": _get_user_agent()})
+        self.session.headers.update({"User-Agent": self._get_user_agent()})
 
         headers = {
             "Content-Type": 'application/xml; charset="utf-8"',
