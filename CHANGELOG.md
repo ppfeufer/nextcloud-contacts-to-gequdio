@@ -1,0 +1,60 @@
+# Change Log
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog] and this project adheres to [Semantic Versioning].
+
+<!--
+GitHub MD Syntax:
+https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax
+
+Highlighting:
+https://docs.github.com/assets/cb-41128/mw-1440/images/help/writing/alerts-rendered.webp
+
+> [!NOTE]
+> Highlights information that users should take into account, even when skimming.
+
+> [!IMPORTANT]
+> Crucial information necessary for users to succeed.
+
+> [!WARNING]
+> Critical content demanding immediate user attention due to potential risks.
+-->
+
+## [In Development] - Unreleased
+
+<!--
+Section Order:
+
+### Added
+### Fixed
+### Changed
+### Deprecated
+### Removed
+### Security
+-->
+
+<!-- Your changes go here -->
+
+### Added
+
+- Makefile configuration
+- Changelog file
+- Isort configuration
+
+### Changed
+
+- Moved functions from the global namespace into the `NextcloudContactsToGEQUDIO` namespace.
+
+## [1.0.0] - 2025-12-05
+
+### Added
+
+- Initial release of Nextcloud Contacts to GEQUDIO synchronization tool.
+
+<!-- Links -->
+
+[1.0.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/commits/v1.0.0 "v1.0.0"
+[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.5.1...HEAD "In Development"
+[keep a changelog]: https://keepachangelog.com/en/1.0.0/ "Keep a Changelog"
+[semantic versioning]: https://semver.org/spec/v2.0.0.html "Semantic Versioning"
