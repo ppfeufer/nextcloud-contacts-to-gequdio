@@ -36,6 +36,8 @@ Section Order:
 
 <!-- Your changes go here -->
 
+## [1.1.0] - 2025-12-06
+
 ### Added
 
 - Makefile configuration
@@ -45,17 +47,18 @@ Section Order:
 
 ### Changed
 
-- Moved functions from the global namespace into the `NextcloudContactsToGEQUDIO` namespace.
+- Moved functions from the global namespace into the class
 
 ## [1.0.0] - 2025-12-05
 
 ### Added
 
-- Initial release of Nextcloud Contacts to GEQUDIO synchronization tool.
+- Initial release of Nextcloud Contacts to GEQUDIO XML tool
 
 <!-- Links -->
 
 [1.0.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/commits/v1.0.0 "v1.0.0"
-[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.5.1...HEAD "In Development"
+[1.1.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.0.0...v1.1.0 "v1.1.0"
+[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.1.0...HEAD "In Development"
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/ "Keep a Changelog"
 [semantic versioning]: https://semver.org/spec/v2.0.0.html "Semantic Versioning"
