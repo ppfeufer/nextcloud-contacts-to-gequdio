@@ -219,12 +219,14 @@ repos:
           - mdformat-black==0.1.1  # Mdformat plugin to Blacken Python code blocks » https://github.com/hukkin/mdformat-black/tags
           - mdformat-shfmt==0.2.0  # Mdformat plugin to format shell code blocks » https://github.com/hukkin/mdformat-shfmt/tags
 
-  - repo: https://github.com/abravalheri/validate-pyproject
-    rev: 78f5e0f104cfa803d0597eaa924b4de3becd3e3e  # frozen: v0.24.1
+  - repo: https://github.com/pylint-dev/pylint
+    rev: e16f942166511d6fb4427e503a734152fae0c4fe  # frozen: v4.0.4
     hooks:
-      - id: validate-pyproject
-        name: Validate pyproject.toml
-        description: Validate the pyproject.toml file.
+      - id: pylint
+        name: Pylint
+        description: Check for errors and code smells in Python code.
+        args:
+          - --py-version=3.10  # Minimum required Python version for AA. Update as needed.
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 16a6ad2fead09286ee6eb6b0a3fab55655a6c22a  # frozen: 0.35.0
