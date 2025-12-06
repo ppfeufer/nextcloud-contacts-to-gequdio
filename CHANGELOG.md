@@ -36,6 +36,10 @@ Section Order:
 
 <!-- Your changes go here -->
 
+### Changed
+
+- Reduce the number of calls to Nextcloud by fetching all contacts in one request
+
 ## [1.1.0] - 2025-12-06
 
 ### Added
