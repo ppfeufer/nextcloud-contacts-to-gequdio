@@ -168,13 +168,14 @@ class NextcloudWebDAVClient:
         """
 
         body = """<?xml version="1.0"?>
-<d:propfind xmlns:d="DAV:">
-    <d:prop>
-        <d:getetag/>
-        <d:getcontenttype/>
-        <d:displayname/>
-    </d:prop>
-</d:propfind>"""
+        <d:propfind xmlns:d="DAV:">
+            <d:prop>
+                <d:getetag/>
+                <d:getcontenttype/>
+                <d:displayname/>
+            </d:prop>
+        </d:propfind>
+        """
         # ensure a User-Agent is present on the session
         self.session.headers.update({"User-Agent": self._get_user_agent()})
 
@@ -259,6 +260,7 @@ class NextcloudWebDAVClient:
         resp = self.session.get(
             url=urljoin(base=self.base_url, url=href), verify=self.verify
         )
+
         resp.raise_for_status()
 
         return resp.text
@@ -271,11 +273,43 @@ class NextcloudWebDAVClient:
         :rtype: List[str]
         """
 
-        return [
-            self.get_contact(item["href"])
-            for item in self.list_contacts()
-            if "vcard" in (item.get("content_type", "").lower())
-        ]
+        # Perform a single CardDAV REPORT to fetch all vCards in one request
+        body = """<?xml version="1.0"?>
+        <C:addressbook-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:carddav">
+            <D:prop>
+                <D:getetag/>
+                <C:address-data/>
+            </D:prop>
+            <C:filter/>
+        </C:addressbook-query>
+        """
+
+        self.session.headers.update({"User-Agent": self._get_user_agent()})
+
+        headers = {
+            "Content-Type": 'application/xml; charset="utf-8"',
+            "Depth": "1",
+        }
+        resp = self.session.request(
+            method="REPORT",
+            url=self.base_url,
+            data=body.encode("utf-8"),
+            headers=headers,
+            verify=self.verify,
+        )
+
+        resp.raise_for_status()
+
+        root = ET.fromstring(resp.text)
+        vcards = []
+
+        for response in root.findall(".//{DAV:}response"):
+            addrdata = response.find(".//{urn:ietf:params:xml:ns:carddav}address-data")
+
+            if addrdata is not None and addrdata.text:
+                vcards.append(addrdata.text)
+
+        return vcards
 
     def create_gequdio_contact_xml(
         self, vcard_list: list[str], write_path: str | None = None
