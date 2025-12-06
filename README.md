@@ -19,7 +19,7 @@ ______________________________________________________________________
   ```bash
   git clone https://github.com/ppfeufer/nextcloud-contacts-to-gequdio.git
   ```
-- Ensure you have Python 3.x installed on your system.
+- Ensure you have Python 3.10 or higher installed on your system.
 - Create a virtual environment and activate it:
   ```bash
   python3 -m venv venv
@@ -39,7 +39,7 @@ ______________________________________________________________________
   - `addressbook`: The name of the address book to export contacts from. (Default is "contacts")
 - Run the script:
   ```bash
-  python3 nextcloud_contacts_to_gequdio.py
+  python nextcloud_contacts_to_gequdio.py
   ```
 - Create a cron job to run the script periodically if desired.
   ```bash
