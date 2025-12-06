@@ -19,7 +19,7 @@ from urllib.parse import urljoin
 import requests
 from requests.auth import HTTPBasicAuth
 
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.1.1"
 
 
 def load_settings(path: str) -> dict:

@@ -36,6 +36,8 @@ Section Order:
 
 <!-- Your changes go here -->
 
+## [1.1.1] - 2025-12-06
+
 ### Fixed
 
 - "Home" number type was not mapped correctly. As GEQUDIO only allows 3 types
@@ -69,6 +71,7 @@ Section Order:
 
 [1.0.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/commits/v1.0.0 "v1.0.0"
 [1.1.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.0.0...v1.1.0 "v1.1.0"
-[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.1.0...HEAD "In Development"
+[1.1.1]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.1.0...v1.1.1 "v1.1.1"
+[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.1.1...HEAD "In Development"
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/ "Keep a Changelog"
 [semantic versioning]: https://semver.org/spec/v2.0.0.html "Semantic Versioning"
