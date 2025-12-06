@@ -36,6 +36,12 @@ Section Order:
 
 <!-- Your changes go here -->
 
+### Fixed
+
+- "Home" number type was not mapped correctly. As GEQUDIO only allows 3 types
+  (Mobile, Telephone, Other), "Home" is now mapped to "Other", since "Telephone" is
+  displayed as "Office" on the phone.
+
 ### Changed
 
 - Reduce the number of calls to Nextcloud by fetching all contacts in one request
