@@ -343,7 +343,8 @@ class NextcloudWebDAVClient:
                     (
                         group
                         for group, keywords in (
-                            ("Telephone", {"work", "desk", "office", "home"}),
+                            # GEQUDIO sees "Telephone" as "Office", so map accordingly here
+                            ("Telephone", {"work", "desk", "office"}),
                             ("Mobile", {"cell", "mobile"}),
                         )
                         if {t.strip().lower() for t in types} & keywords
