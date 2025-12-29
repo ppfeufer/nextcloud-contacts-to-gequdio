@@ -36,6 +36,10 @@ Section Order:
 
 <!-- Your changes go here -->
 
+### Changed
+
+- Normalize international prefix and remove non-numeric characters except `*`
+
 ## [1.1.1] - 2025-12-06
 
 ### Fixed

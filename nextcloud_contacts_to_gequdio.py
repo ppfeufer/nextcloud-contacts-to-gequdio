@@ -11,6 +11,7 @@ Requirements:
 
 # Standard Library
 import configparser
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from urllib.parse import urljoin
@@ -360,6 +361,11 @@ class NextcloudWebDAVClient:
                 el = contact_node.find(tag)
                 if el is None or el.text:
                     el = ET.SubElement(contact_node, tag)
+
+                # normalize international prefix and remove non-numeric characters except '*'
+                number = re.sub(r"^\+", "00", number)
+                number = re.sub(r"[^0-9*]+", "", number)
+
                 el.text = number
 
         xml_body = ET.tostring(root_node, encoding="utf-8").decode("utf-8")
