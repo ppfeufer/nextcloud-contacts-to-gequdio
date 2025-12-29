@@ -28,3 +28,43 @@ jobs:
 
       - name: Run Pre Commit Checks
         uses: pre-commit/action@v3.0.1
+
+  # Run Test Coverage
+  test-coverage:
+    needs: [ pre-commit ]
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version:
+          # https://endoflife.date/python
+          - '3.10'  # [EOL] End of Life: 31 Oct 2026
+          - '3.11'  # [EOL] End of Life: 31 Dec 2027
+          - '3.12'  # [EOL] End of Life: 31 Dec 2028
+          - '3.13'  # [EOL] End of Life: 31 Oct 2029
+
+    steps:
+      # Checkout the repository
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Set up Python
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install '.[tests]'
+
+      - name: Run tests with coverage
+        run: |
+          coverage run -m pytest --ignore=tests nextcloud_contacts_to_gequdio
+          coverage xml -o coverage.xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }} # optional for public repos
