@@ -219,6 +219,24 @@ repos:
           - mdformat-black==0.1.1  # Mdformat plugin to Blacken Python code blocks » https://github.com/hukkin/mdformat-black/tags
           - mdformat-shfmt==0.2.0  # Mdformat plugin to format shell code blocks » https://github.com/hukkin/mdformat-shfmt/tags
 
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: d252a2a7678b47d1f2eea2f6b846ddfdcd012759  # frozen: v2.11.1
+    hooks:
+      - id: pyproject-fmt
+        name: pyproject.toml formatter
+        description: Format the pyproject.toml file.
+        args:
+          - --indent=4
+        additional_dependencies:
+          - tox==4.32.0  # https://github.com/tox-dev/tox/releases/latest
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: 78f5e0f104cfa803d0597eaa924b4de3becd3e3e  # frozen: v0.24.1
+    hooks:
+      - id: validate-pyproject
+        name: Validate pyproject.toml
+        description: Validate the pyproject.toml file.
+
   - repo: https://github.com/pylint-dev/pylint
     rev: e16f942166511d6fb4427e503a734152fae0c4fe  # frozen: v4.0.4
     hooks:

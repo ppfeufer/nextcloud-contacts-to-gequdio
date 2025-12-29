@@ -1,0 +1,48 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = [
+    "hatchling",
+]
+
+[project]
+name = "nextcloud-contacts-to-gequdio"
+description = "Convert Nextcloud Contacts to GEQUDIO XML"
+readme = "README.md"
+keywords = [
+    "contacts",
+    "gequdio",
+    "nextcloud",
+    "vcard",
+    "xml",
+]
+license = { file = "LICENSE" }
+authors = [
+    { name = "Peter Pfeufer", email = "develop@ppfeufer.de" },
+]
+requires-python = ">=3.10,<3.14"
+classifiers = [
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dynamic = [
+    "version",
+]
+dependencies = [
+    "requests",
+]
+optional-dependencies.tests = [
+    "coverage",
+    "pytest>=7",
+    "pytest-cov",
+]
+
+[tool.hatch.build]
+include = [
+    "/nextcloud_contacts_to_gequdio",
+]
+
+[tool.hatch.version]
+path = "nextcloud_contacts_to_gequdio/__init__.py"

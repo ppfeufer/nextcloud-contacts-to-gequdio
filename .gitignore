@@ -1,2 +1,8 @@
-/gequdio.xml
-/settings.ini
+/nextcloud_contacts_to_gequdio/gequdio.xml
+/nextcloud_contacts_to_gequdio/settings.ini
+/coverage.xml
+/.coverage
+/htmlcov/
+/build/
+/dist/
+__pycache__

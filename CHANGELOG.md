@@ -36,12 +36,17 @@ Section Order:
 
 <!-- Your changes go here -->
 
+### Added
+
+- Tests
+
 ### Fixed
 
 - Some methods are static and should be decorated as such
 
 ### Changed
 
+- Made it a proper Python package
 - Normalize international prefix and remove non-numeric characters except `*`
 
 ## [1.1.1] - 2025-12-06

@@ -20,7 +20,8 @@ from urllib.parse import urljoin
 import requests
 from requests.auth import HTTPBasicAuth
 
-APP_VERSION = "1.1.1"
+# Nextcloud Contacts to GEQUDIO
+from nextcloud_contacts_to_gequdio import __version__
 
 
 def load_settings(path: str) -> dict:
@@ -105,10 +106,12 @@ class NextcloudWebDAVClient:
         :rtype: str
         """
 
-        return f"NextcloudContactsToGEQUDIO/{APP_VERSION} (+https://github.com/ppfeufer/nextcloud-contacts-to-gequdio) via python-requests/{requests.__version__}"
+        return f"NextcloudContactsToGEQUDIO/{__version__} (+https://github.com/ppfeufer/nextcloud-contacts-to-gequdio) via python-requests/{requests.__version__}"
 
     @staticmethod
-    def _parse_vcard(vcard: str) -> tuple[str, list[tuple[str, list[str]]]]:
+    def _parse_vcard(  # pylint: disable=too-many-locals, too-many-branches
+        vcard: str,
+    ) -> tuple[str, list[tuple[str, list[str]]]]:
         """
         Parses a vCard string to extract the full name and telephone numbers with types.
 
@@ -118,47 +121,84 @@ class NextcloudWebDAVClient:
         :rtype: Tuple[str, List[Tuple[str, List[str]]]]
         """
 
-        def unfold_lines(vcard: str) -> list[str]:
-            """
-            Unfolds folded lines in a vCard string.
+        # Normalize line endings and split
+        lines = vcard.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+        # Unfold folded lines (lines that start with space or tab are continuations),
+        # but if a continuation looks like a new property (e.g. "TEL;...:"), treat it as a separate line.
+        unfolded = []
+        prop_pattern = re.compile(r"^[A-Za-z0-9\-]+(?:;.*)?:")  # matches "PROP[:|;...]"
 
-            :param vcard: vCard string
-            :type vcard: str
-            :return: List of unfolded lines
-            :rtype: List[str]
-            """
+        for line in lines:
+            if not line:
+                continue
 
-            lines = vcard.splitlines()
-            out = []
+            if line[0] in (" ", "\t") and unfolded:
+                cont = line[1:]
 
-            for line in lines:
-                if not line:
+                if prop_pattern.match(cont):
+                    # Continuation actually looks like a property -> add as new line
+                    unfolded.append(cont)
+                else:
+                    # Decide whether to insert a space when unfolding based on the previous property
+                    prev = unfolded[-1]
+                    prev_key = prev.split(":", 1)[0]
+                    prev_prop = prev_key.split(";", 1)[0].upper().strip()
+
+                    if prev_prop == "TEL":
+                        # Phone numbers should be concatenated without spaces
+                        unfolded[-1] += cont
+                    else:
+                        # For textual properties (like FN) insert a space if appropriate
+                        if not prev.endswith(" ") and not cont.startswith(" "):
+                            unfolded[-1] += " " + cont
+                        else:
+                            unfolded[-1] += cont
+            else:
+                unfolded.append(line)
+
+        name = "Unknown"
+        numbers = []
+
+        for line in unfolded:  # pylint: disable=too-many-nested-blocks
+            if ":" not in line:
+                continue
+
+            key, value = line.split(":", 1)
+            prop = key.split(";", 1)[0].upper().strip()
+
+            if prop == "FN":
+                name = value.strip() or "Unknown"
+            elif prop == "TEL":
+                val = value.strip()
+
+                if not val:
+                    # skip empty telephone values
                     continue
 
-                if line.startswith((" ", "\t")) and out:
-                    out[-1] += line.lstrip()
-                else:
-                    out.append(line)
+                types = []
 
-            return out
+                if ";" in key:
+                    params = key.split(";")[1:]
 
-        fn, tels = None, []
+                    for p in params:
+                        if "=" in p:
+                            k, v = p.split("=", 1)
 
-        for line in unfold_lines(vcard):
-            if line.upper().startswith("FN:"):
-                fn = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("TEL"):
-                parts = line.split(":", 1)
-                number = parts[1].strip().split(":", 1)[-1]
-                types = [
-                    t.strip().lower()
-                    for t in parts[0].split(";")[1:]
-                    if "=" in t
-                    for t in t.split("=", 1)[1].split(",")
-                ]
-                tels.append((number, types))
+                            if k.strip().upper() == "TYPE":
+                                types.extend(
+                                    [
+                                        t.strip().lower()
+                                        for t in v.split(",")
+                                        if t.strip()
+                                    ]
+                                )
+                        else:
+                            if p.strip():
+                                types.append(p.strip().lower())
 
-        return fn or "Unknown", tels
+                numbers.append((val, types))
+
+        return name, numbers
 
     def _propfind(self, depth: str = "1"):
         """
@@ -198,58 +238,6 @@ class NextcloudWebDAVClient:
         resp.raise_for_status()
 
         return resp.text
-
-    @staticmethod
-    def _unfold_vcard_lines(vcard: str) -> list[str]:
-        """
-        Unfolds folded lines in a vCard string.
-
-        :param vcard: vCard string
-        :type vcard: str
-        :return: List of unfolded lines
-        :rtype: List[str]
-        """
-
-        lines = vcard.splitlines()
-        out = []
-
-        for line in lines:
-            if not line:
-                continue
-
-            if line[0] in (" ", "\t") and out:
-                out[-1] += line.lstrip()
-            else:
-                out.append(line)
-
-        return out
-
-    def list_contacts(self) -> list[dict]:
-        """
-        Lists contact entries in the addressbook.
-
-        :return: List of dicts with contact info
-        :rtype:  List[dict]
-        """
-
-        root = ET.fromstring(self._propfind())
-        results = []
-
-        for response in root.findall(".//{DAV:}response"):
-            href = response.find("{DAV:}href")
-            prop = response.find(".//{DAV:}prop")
-
-            if href is not None and prop is not None:
-                results.append(
-                    {
-                        "href": href.text,
-                        "content_type": prop.findtext("{DAV:}getcontenttype", ""),
-                        "etag": prop.findtext("{DAV:}getetag", ""),
-                        "displayname": prop.findtext("{DAV:}displayname", ""),
-                    }
-                )
-
-        return results
 
     def get_contact(self, href: str) -> str:
         """
