@@ -36,6 +36,10 @@ Section Order:
 
 <!-- Your changes go here -->
 
+### Fixed
+
+- Some methods are static and should be decorated as such
+
 ### Changed
 
 - Normalize international prefix and remove non-numeric characters except `*`

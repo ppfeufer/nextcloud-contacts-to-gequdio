@@ -96,7 +96,8 @@ class NextcloudWebDAVClient:
         self.session.auth = HTTPBasicAuth(username=username, password=password)
         self.verify = verify_ssl
 
-    def _get_user_agent(self) -> str:
+    @staticmethod
+    def _get_user_agent() -> str:
         """
         Returns a default User-Agent string for HTTP requests.
 
@@ -106,7 +107,8 @@ class NextcloudWebDAVClient:
 
         return f"NextcloudContactsToGEQUDIO/{APP_VERSION} (+https://github.com/ppfeufer/nextcloud-contacts-to-gequdio) via python-requests/{requests.__version__}"
 
-    def _parse_vcard(self, vcard: str) -> tuple[str, list[tuple[str, list[str]]]]:
+    @staticmethod
+    def _parse_vcard(vcard: str) -> tuple[str, list[tuple[str, list[str]]]]:
         """
         Parses a vCard string to extract the full name and telephone numbers with types.
 
@@ -177,7 +179,7 @@ class NextcloudWebDAVClient:
             </d:prop>
         </d:propfind>
         """
-        # ensure a User-Agent is present on the session
+        # Ensure a User-Agent is present on the session
         self.session.headers.update({"User-Agent": self._get_user_agent()})
 
         headers = {
@@ -197,7 +199,8 @@ class NextcloudWebDAVClient:
 
         return resp.text
 
-    def _unfold_vcard_lines(self, vcard: str) -> list[str]:
+    @staticmethod
+    def _unfold_vcard_lines(vcard: str) -> list[str]:
         """
         Unfolds folded lines in a vCard string.
 
@@ -328,7 +331,7 @@ class NextcloudWebDAVClient:
 
         root_node = ET.Element("GEQUDIODirectory")
 
-        # sort contacts by full name (case-insensitive) before processing
+        # Sort contacts by full name (case-insensitive) before processing
         for vcard in sorted(vcard_list, key=lambda v: self._parse_vcard(v)[0].lower()):
             contact_name, tels = self._parse_vcard(vcard)
 
@@ -353,7 +356,7 @@ class NextcloudWebDAVClient:
                     "Other",
                 )
 
-                # ensure all possible nodes exist (create empty ones if missing)
+                # Ensure all possible nodes exist (create empty ones if missing)
                 for _tag in ("Telephone", "Mobile", "Other"):
                     if contact_node.find(_tag) is None:
                         ET.SubElement(contact_node, _tag)
@@ -362,7 +365,7 @@ class NextcloudWebDAVClient:
                 if el is None or el.text:
                     el = ET.SubElement(contact_node, tag)
 
-                # normalize international prefix and remove non-numeric characters except '*'
+                # Normalize international prefix and remove non-numeric characters except '*'
                 number = re.sub(r"^\+", "00", number)
                 number = re.sub(r"[^0-9*]+", "", number)
 

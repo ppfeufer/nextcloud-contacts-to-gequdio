@@ -92,6 +92,7 @@ help::
 	@echo "    help                        Show this help message"
 	@echo "    prepare-release             Prepare a release and update the version in 'nextcloud_contacts_to_gequdio.py'."
 	@echo "                                Please make sure to update the 'CHANGELOG.md' file accordingly."
+	@echo "    run                         Run the application."
 	@echo ""
 
 # Include the configurations
