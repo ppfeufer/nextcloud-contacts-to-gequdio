@@ -106,7 +106,10 @@ class NextcloudWebDAVClient:
         :rtype: str
         """
 
-        return f"NextcloudContactsToGEQUDIO/{__version__} (+https://github.com/ppfeufer/nextcloud-contacts-to-gequdio) via python-requests/{requests.__version__}"
+        return (
+            f"NextcloudContactsToGEQUDIO/{__version__} "
+            f"(+https://github.com/ppfeufer/nextcloud-contacts-to-gequdio) via python-requests/{requests.__version__}"
+        )
 
     @staticmethod
     def _parse_vcard(  # pylint: disable=too-many-locals, too-many-branches
@@ -199,63 +202,6 @@ class NextcloudWebDAVClient:
                 numbers.append((val, types))
 
         return name, numbers
-
-    def _propfind(self, depth: str = "1"):
-        """
-        Internal method to perform a PROPFIND request.
-
-        :param depth: Depth header value ("0", "1", or "infinity")
-        :type depth: str
-        :return: Response XML text
-        :rtype: str
-        """
-
-        body = """<?xml version="1.0"?>
-        <d:propfind xmlns:d="DAV:">
-            <d:prop>
-                <d:getetag/>
-                <d:getcontenttype/>
-                <d:displayname/>
-            </d:prop>
-        </d:propfind>
-        """
-        # Ensure a User-Agent is present on the session
-        self.session.headers.update({"User-Agent": self._get_user_agent()})
-
-        headers = {
-            "Content-Type": 'application/xml; charset="utf-8"',
-            "Depth": depth,
-        }
-
-        resp = self.session.request(
-            method="PROPFIND",
-            url=self.base_url,
-            data=body.encode("utf-8"),
-            headers=headers,
-            verify=self.verify,
-        )
-
-        resp.raise_for_status()
-
-        return resp.text
-
-    def get_contact(self, href: str) -> str:
-        """
-        Retrieves the vCard content of a contact entry.
-
-        :param href: Href of the contact entry
-        :type href: str
-        :return: vCard string
-        :rtype: str
-        """
-
-        resp = self.session.get(
-            url=urljoin(base=self.base_url, url=href), verify=self.verify
-        )
-
-        resp.raise_for_status()
-
-        return resp.text
 
     def download_all_contacts(self) -> list[str]:
         """

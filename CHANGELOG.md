@@ -49,6 +49,10 @@ Section Order:
 - Made it a proper Python package
 - Normalize international prefix and remove non-numeric characters except `*`
 
+### Removed
+
+- Obsolete functions
+
 ## [1.1.1] - 2025-12-06
 
 ### Fixed

@@ -15,70 +15,144 @@ from nextcloud_contacts_to_gequdio.nextcloud_to_gequdio import (
 )
 
 
+# load_settings()
 def test_loads_settings_returns_correct_values_for_valid_ini():
+    """
+    Test that load_settings returns correct values for a valid INI file.
+
+    :return:
+    :rtype:
+    """
+
     valid_ini = Path("valid.ini")
     valid_ini.write_text(
         "[nextcloud]\nurl=https://example.com\nuser=test_user\npassword=test_pass\naddressbook=my_contacts\nverify_ssl=False"
     )
+
     result = load_settings(str(valid_ini))
+
     assert result["url"] == "https://example.com"
     assert result["username"] == "test_user"
     assert result["password"] == "test_pass"
     assert result["addressbook"] == "my_contacts"
     assert result["verify_ssl"] is False
+
     valid_ini.unlink()
 
 
 def test_loads_settings_uses_default_addressbook_when_missing():
+    """
+    Test that load_settings uses default addressbook when missing.
+
+    :return:
+    :rtype:
+    """
+
     default_ini = Path("default.ini")
     default_ini.write_text(
         "[nextcloud]\nurl=https://example.com\nuser=test_user\npassword=test_pass\nverify_ssl=True"
     )
+
     result = load_settings(str(default_ini))
+
     assert result["addressbook"] == "contacts"
+
     default_ini.unlink()
 
 
 def test_loads_settings_raises_file_not_found_for_nonexistent_file():
+    """
+    Test that load_settings raises FileNotFoundError for nonexistent file.
+
+    :return:
+    :rtype:
+    """
+
     with pytest.raises(FileNotFoundError):
         load_settings("nonexistent.ini")
 
 
 def test_loads_settings_raises_key_error_for_missing_nextcloud_section():
+    """
+    Test that load_settings raises KeyError for missing nextcloud section.
+
+    :return:
+    :rtype:
+    """
+
     invalid_ini = Path("invalid.ini")
     invalid_ini.write_text("[wrong_section]\nkey=value")
+
     with pytest.raises(KeyError):
         load_settings(str(invalid_ini))
+
     invalid_ini.unlink()
 
 
 def test_loads_settings_sets_default_addressbook_when_empty():
+    """
+    Test that load_settings sets default addressbook when empty.
+
+    :return:
+    :rtype:
+    """
+
     empty_ini = Path("empty_addressbook.ini")
     empty_ini.write_text(
         "[nextcloud]\nurl=https://example.com\nuser=test_user\npassword=test_pass\naddressbook=\nverify_ssl=True"
     )
+
     result = load_settings(str(empty_ini))
+
     assert result["addressbook"] == "contacts"
+
     empty_ini.unlink()
 
 
 def test_loads_settings_preserves_provided_addressbook():
+    """
+    Test that load_settings preserves provided addressbook.
+
+    :return:
+    :rtype:
+    """
+
     custom_ini = Path("custom_addressbook.ini")
     custom_ini.write_text(
         "[nextcloud]\nurl=https://example.com\nuser=test_user\npassword=test_pass\naddressbook=my_contacts\nverify_ssl=True"
     )
+
     result = load_settings(str(custom_ini))
+
     assert result["addressbook"] == "my_contacts"
+
     custom_ini.unlink()
 
 
+# NextcloudWebDAVClient._get_user_agent()
 def test_user_agent_contains_correct_app_version():
+    """
+    Test that the user agent contains the correct application version.
+
+    :return:
+    :rtype:
+    """
+
     result = NextcloudWebDAVClient._get_user_agent()
+
     assert f"NextcloudContactsToGEQUDIO/{__version__}" in result
 
 
 def test_user_agent_contains_correct_requests_version():
+    """
+    Test that the user agent contains the correct requests library version.
+
+    :return:
+    :rtype:
+    """
+
     result = NextcloudWebDAVClient._get_user_agent()
+
     assert f"python-requests/{requests.__version__}" in result
 
 
@@ -89,294 +163,309 @@ def test_user_agent_contains_correct_repository_url():
 
 # NextcloudWebDAVClient.__init__
 def test_nextcloud_client_initializes_with_valid_settings():
+    """
+    Test that NextcloudWebDAVClient initializes with valid settings.
+
+    :return:
+    :rtype:
+    """
+
     client = NextcloudWebDAVClient("url", "user", "pass")
+
     assert client.base_url.endswith("contacts/")
 
 
 # NextcloudWebDAVClient.get_contact()
 def test_nextcloud_client_raises_for_invalid_contact_href():
+    """
+    Test that NextcloudWebDAVClient.get_contact raises for invalid contact href.
+
+    :return:
+    :rtype:
+    """
+
     client = NextcloudWebDAVClient("url", "user", "pass")
+
     with pytest.raises(Exception):
         client.get_contact("invalid_href")
 
 
 # NextcloudWebDAVClient._parse_vcard()
 def test_parse_vcard_handles_vcard_with_no_properties():
+    """
+    Test that _parse_vcard handles a vCard with no properties.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "Unknown"
     assert numbers == []
 
 
 def test_parse_vcard_handles_vcard_with_only_whitespace():
+    """
+    Test that _parse_vcard handles a vCard with only whitespace.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\n   \nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "Unknown"
     assert numbers == []
 
 
 def test_parse_vcard_handles_vcard_with_invalid_property_format():
+    """
+    Test that _parse_vcard handles a vCard with invalid property format.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nINVALID_PROPERTY\nFN:John Doe\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == []
 
 
 def test_parse_vcard_handles_vcard_with_multiple_folded_properties():
+    """
+    Test that _parse_vcard handles a vCard with multiple folded properties.
+
+    :return:
+    :rtype:
+    """
+
     vcard = (
         "BEGIN:VCARD\nFN:John\n Doe\nTEL;TYPE=HOME:123\n 456789\n"
         "TEL;TYPE=CELL:987\n 654321\nEND:VCARD"
     )
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("123456789", ["home"]), ("987654321", ["cell"])]
 
 
 def test_parse_vcard_handles_vcard_with_empty_tel_property():
+    """
+    Test that _parse_vcard handles a vCard with an empty TEL property.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\nTEL:\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == []
 
 
 def test_parse_vcard_handles_vcard_with_tel_property_without_value():
+    """
+    Test that _parse_vcard handles a vCard with a TEL property without value.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\nTEL;TYPE=HOME:\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == []
 
 
 def test_parse_vcard_handles_vcard_with_duplicate_properties():
+    """
+    Test that _parse_vcard handles a vCard with duplicate properties.
+
+    :return:
+    :rtype:
+    """
+
     vcard = (
         "BEGIN:VCARD\nFN:John Doe\nFN:Jane Doe\n"
         "TEL;TYPE=HOME:123456789\nTEL;TYPE=HOME:987654321\nEND:VCARD"
     )
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "Jane Doe"
     assert numbers == [("123456789", ["home"]), ("987654321", ["home"])]
 
 
 def test_parse_vcard_ignores_empty_lines():
+    """
+    Test that _parse_vcard ignores empty lines.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\n\nFN:John Doe\n\nTEL:123456789\n\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("123456789", [])]
 
 
 def test_parse_vcard_handles_vcard_with_only_empty_lines():
+    """
+    Test that _parse_vcard handles a vCard with only empty lines.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\n\n\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "Unknown"
     assert numbers == []
 
 
 def test_parse_vcard_handles_continuation_as_new_property():
+    """
+    Test that _parse_vcard handles continuation as a new property.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\n TEL;TYPE=HOME:123456789\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("123456789", ["home"])]
 
 
 def test_parse_vcard_handles_continuation_with_invalid_property():
+    """
+    Test that _parse_vcard handles continuation with an invalid property.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\n TELINVALID:123456789\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == []
 
 
 def test_parse_vcard_handles_continuation_with_mixed_properties():
+    """
+    Test that _parse_vcard handles continuation with mixed properties.
+
+    :return:
+    :rtype:
+    """
+
     vcard = (
         "BEGIN:VCARD\nFN:John\n Doe\n TEL;TYPE=HOME:123\n 456789\n"
         "TEL;TYPE=CELL:987\n 654321\nEND:VCARD"
     )
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("123456789", ["home"]), ("987654321", ["cell"])]
 
 
 def test_parse_vcard_handles_single_type():
+    """
+    Test that _parse_vcard handles a single type.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\nTEL;TYPE=HOME:123456789\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("123456789", ["home"])]
 
 
 def test_parse_vcard_handles_multiple_types_with_whitespace_and_case():
+    """
+    Test that _parse_vcard handles multiple types with whitespace and case.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\nTEL;TYPE= HOME , Work :123456789\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("123456789", ["home", "work"])]
 
 
 def test_parse_vcard_handles_flag_style_type_parameter():
+    """
+    Test that _parse_vcard handles flag-style TYPE parameter.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\nTEL;HOME:123456789\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("123456789", ["home"])]
 
 
 def test_parse_vcard_ignores_unrelated_parameters_and_extracts_type():
+    """
+    Test that _parse_vcard ignores unrelated parameters and extracts type.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\nTEL;PREF=1;TYPE=WORK:987654321\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("987654321", ["work"])]
 
 
 def test_parse_vcard_handles_invalid_type_format_preserving_raw_value():
+    """
+    Test that _parse_vcard handles invalid TYPE format preserving raw value.
+
+    :return:
+    :rtype:
+    """
+
     vcard = "BEGIN:VCARD\nFN:John Doe\nTEL;TYPE=HOME=WORK:123456789\nEND:VCARD"
     name, numbers = NextcloudWebDAVClient._parse_vcard(vcard)
+
     assert name == "John Doe"
     assert numbers == [("123456789", ["home=work"])]
 
 
-# NextcloudWebDAVClient._propfind()
-def test_propfind_returns_valid_response_for_depth_1(monkeypatch):
-    mock_session = Mock()
-    mock_response = Mock()
-    mock_response.text = "<response>Valid XML</response>"
-    mock_response.raise_for_status = Mock()
-    mock_session.request.return_value = mock_response
-
-    client = NextcloudWebDAVClient(
-        url="https://example.com",
-        username="user",
-        password="pass",
-        addressbook="contacts",
-    )
-    client.session = mock_session
-
-    response = client._propfind(depth="1")
-    assert response == "<response>Valid XML</response>"
-    mock_session.request.assert_called_once_with(
-        method="PROPFIND",
-        url=client.base_url,
-        data=ANY,
-        headers=ANY,
-        verify=client.verify,
-    )
-
-
-def test_propfind_raises_exception_for_invalid_response(monkeypatch):
-    mock_session = Mock()
-    mock_response = Mock()
-    mock_response.raise_for_status.side_effect = Exception("HTTP Error")
-    mock_session.request.return_value = mock_response
-
-    client = NextcloudWebDAVClient(
-        url="https://example.com",
-        username="user",
-        password="pass",
-        addressbook="contacts",
-    )
-    client.session = mock_session
-
-    with pytest.raises(Exception, match="HTTP Error"):
-        client._propfind(depth="1")
-
-
-def test_propfind_sends_correct_headers(monkeypatch):
-    mock_session = Mock()
-    mock_response = Mock()
-    mock_response.text = "<response>Valid XML</response>"
-    mock_response.raise_for_status = Mock()
-    mock_session.request.return_value = mock_response
-
-    client = NextcloudWebDAVClient(
-        url="https://example.com",
-        username="user",
-        password="pass",
-        addressbook="contacts",
-    )
-    client.session = mock_session
-
-    client._propfind(depth="1")
-    headers = {
-        "Content-Type": 'application/xml; charset="utf-8"',
-        "Depth": "1",
-    }
-    mock_session.request.assert_called_once_with(
-        method="PROPFIND",
-        url=client.base_url,
-        data=ANY,
-        headers=headers,
-        verify=client.verify,
-    )
-
-
-def test_propfind_handles_different_depth_values(monkeypatch):
-    mock_session = Mock()
-    mock_response = Mock()
-    mock_response.text = "<response>Valid XML</response>"
-    mock_response.raise_for_status = Mock()
-    mock_session.request.return_value = mock_response
-
-    client = NextcloudWebDAVClient(
-        url="https://example.com",
-        username="user",
-        password="pass",
-        addressbook="contacts",
-    )
-    client.session = mock_session
-
-    for depth in ["0", "1", "infinity"]:
-        response = client._propfind(depth=depth)
-        assert response == "<response>Valid XML</response>"
-        mock_session.request.assert_called_with(
-            method="PROPFIND",
-            url=client.base_url,
-            data=ANY,
-            headers={
-                "Content-Type": 'application/xml; charset="utf-8"',
-                "Depth": depth,
-            },
-            verify=client.verify,
-        )
-
-
-# NextcloudWebDAVClient.get_contact()
-def test_retrieves_vcard_content_successfully(monkeypatch):
-    mock_session = Mock()
-    mock_response = Mock()
-    mock_response.text = "BEGIN:VCARD\nFN:John Doe\nEND:VCARD"
-    mock_response.raise_for_status = Mock()
-    mock_session.get.return_value = mock_response
-
-    client = NextcloudWebDAVClient(
-        url="https://example.com",
-        username="user",
-        password="pass",
-        addressbook="contacts",
-    )
-    client.session = mock_session
-
-    vcard = client.get_contact(href="contact.vcf")
-    assert vcard == "BEGIN:VCARD\nFN:John Doe\nEND:VCARD"
-    mock_session.get.assert_called_once_with(
-        url="https://example.com/remote.php/dav/addressbooks/users/user/contacts/contact.vcf",
-        verify=client.verify,
-    )
-
-
-def test_raises_exception_for_invalid_response(monkeypatch):
-    mock_session = Mock()
-    mock_response = Mock()
-    mock_response.raise_for_status.side_effect = Exception("HTTP Error")
-    mock_session.get.return_value = mock_response
-
-    client = NextcloudWebDAVClient(
-        url="https://example.com",
-        username="user",
-        password="pass",
-        addressbook="contacts",
-    )
-    client.session = mock_session
-
-    with pytest.raises(Exception, match="HTTP Error"):
-        client.get_contact(href="contact.vcf")
-
-
 # NextcloudWebDAVClient.download_all_contacts()
 def test_downloads_all_contacts_successfully(monkeypatch):
+    """
+    Test that download_all_contacts successfully retrieves and parses contacts.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     mock_session = Mock()
     mock_response = Mock()
     mock_response.text = """
@@ -411,6 +500,7 @@ def test_downloads_all_contacts_successfully(monkeypatch):
     client.session = mock_session
 
     vcards = client.download_all_contacts()
+
     assert vcards == [
         "BEGIN:VCARD\nFN:John Doe\nEND:VCARD",
         "BEGIN:VCARD\nFN:Jane Doe\nEND:VCARD",
@@ -425,6 +515,15 @@ def test_downloads_all_contacts_successfully(monkeypatch):
 
 
 def test_handles_empty_addressbook_response(monkeypatch):
+    """
+    Test that download_all_contacts handles an empty address book response.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     mock_session = Mock()
     mock_response = Mock()
     mock_response.text = """
@@ -442,6 +541,7 @@ def test_handles_empty_addressbook_response(monkeypatch):
     client.session = mock_session
 
     vcards = client.download_all_contacts()
+
     assert vcards == []
     mock_session.request.assert_called_once_with(
         method="REPORT",
@@ -453,6 +553,15 @@ def test_handles_empty_addressbook_response(monkeypatch):
 
 
 def test_handles_non_multistatus_xml_returns_empty_list(monkeypatch):
+    """
+    Test that download_all_contacts handles non-multistatus XML and returns an empty list.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     mock_session = Mock()
     mock_response = Mock()
     mock_response.text = "<invalid>XML</invalid>"
@@ -468,10 +577,20 @@ def test_handles_non_multistatus_xml_returns_empty_list(monkeypatch):
     client.session = mock_session
 
     vcards = client.download_all_contacts()
+
     assert vcards == []
 
 
 def test_appends_vcard_text_when_address_data_is_present(monkeypatch):
+    """
+    Test that download_all_contacts appends vCard text when address-data is present.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     mock_session = Mock()
     mock_response = Mock()
     mock_response.text = """
@@ -497,10 +616,20 @@ def test_appends_vcard_text_when_address_data_is_present(monkeypatch):
     client.session = mock_session
 
     vcards = client.download_all_contacts()
+
     assert vcards == ["BEGIN:VCARD\nFN:John Doe\nEND:VCARD"]
 
 
 def test_skips_vcard_when_address_data_is_missing(monkeypatch):
+    """
+    Test that download_all_contacts skips vCard when address-data is missing.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     mock_session = Mock()
     mock_response = Mock()
     mock_response.text = """
@@ -526,10 +655,20 @@ def test_skips_vcard_when_address_data_is_missing(monkeypatch):
     client.session = mock_session
 
     vcards = client.download_all_contacts()
+
     assert vcards == []
 
 
 def test_skips_vcard_when_address_data_tag_is_absent(monkeypatch):
+    """
+    Test that download_all_contacts skips vCard when address-data tag is absent.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     mock_session = Mock()
     mock_response = Mock()
     mock_response.text = """
@@ -554,11 +693,21 @@ def test_skips_vcard_when_address_data_tag_is_absent(monkeypatch):
     client.session = mock_session
 
     vcards = client.download_all_contacts()
+
     assert vcards == []
 
 
 # NextcloudWebDAVClient.create_gequdio_contact_xml()
 def test_generates_valid_xml_with_multiple_contacts(monkeypatch):
+    """
+    Test that create_gequdio_contact_xml generates valid XML with multiple contacts.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     client = NextcloudWebDAVClient(
         url="https://example.com",
         username="user",
@@ -572,6 +721,7 @@ def test_generates_valid_xml_with_multiple_contacts(monkeypatch):
     ]
 
     xml_output = client.create_gequdio_contact_xml(vcards)
+
     assert "<Name>John Doe</Name>" in xml_output
     assert "<Telephone>00123456789</Telephone>" in xml_output
     assert "<Name>Jane Smith</Name>" in xml_output
@@ -579,6 +729,15 @@ def test_generates_valid_xml_with_multiple_contacts(monkeypatch):
 
 
 def test_handles_empty_vcard_list(monkeypatch):
+    """
+    Test that create_gequdio_contact_xml handles an empty vCard list.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     client = NextcloudWebDAVClient(
         url="https://example.com",
         username="user",
@@ -588,11 +747,21 @@ def test_handles_empty_vcard_list(monkeypatch):
 
     xml_output = client.create_gequdio_contact_xml([])
     root = ET.fromstring(xml_output)
+
     assert root.tag == "GEQUDIODirectory"
     assert len(list(root)) == 0
 
 
 def test_normalizes_phone_numbers_correctly(monkeypatch):
+    """
+    Test that create_gequdio_contact_xml normalizes phone numbers correctly.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     client = NextcloudWebDAVClient(
         url="https://example.com",
         username="user",
@@ -605,10 +774,20 @@ def test_normalizes_phone_numbers_correctly(monkeypatch):
     ]
 
     xml_output = client.create_gequdio_contact_xml(vcards)
+
     assert "<Telephone>001234567890</Telephone>" in xml_output
 
 
 def test_assigns_other_tag_for_unknown_phone_types(monkeypatch):
+    """
+    Test that create_gequdio_contact_xml assigns Other tag for unknown phone types.
+
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     client = NextcloudWebDAVClient(
         url="https://example.com",
         username="user",
@@ -621,10 +800,22 @@ def test_assigns_other_tag_for_unknown_phone_types(monkeypatch):
     ]
 
     xml_output = client.create_gequdio_contact_xml(vcards)
+
     assert "<Other>00123456789</Other>" in xml_output
 
 
 def test_writes_output_to_file_when_path_is_provided(tmp_path, monkeypatch):
+    """
+    Test that create_gequdio_contact_xml writes output to file when path is provided.
+
+    :param tmp_path:
+    :type tmp_path:
+    :param monkeypatch:
+    :type monkeypatch:
+    :return:
+    :rtype:
+    """
+
     client = NextcloudWebDAVClient(
         url="https://example.com",
         username="user",
@@ -638,4 +829,5 @@ def test_writes_output_to_file_when_path_is_provided(tmp_path, monkeypatch):
 
     output_path = tmp_path / "output.xml"
     client.create_gequdio_contact_xml(vcards, write_path=str(output_path))
+
     assert output_path.read_text(encoding="utf-8").startswith('<?xml version="1.0"')
