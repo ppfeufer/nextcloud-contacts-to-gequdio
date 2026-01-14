@@ -38,6 +38,7 @@ Section Order:
 
 ### Added
 
+- Name prefix from the N property (e.g., "Dr.", "Prof.", etc.)
 - Tests
 
 ### Fixed

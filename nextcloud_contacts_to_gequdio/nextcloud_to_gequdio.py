@@ -112,9 +112,103 @@ class NextcloudWebDAVClient:
         )
 
     @staticmethod
-    def _parse_vcard(  # pylint: disable=too-many-locals, too-many-branches
-        vcard: str,
-    ) -> tuple[str, list[tuple[str, list[str]]]]:
+    def _extract_tel_types(key: str) -> list[str]:
+        """
+        Extracts telephone types from a TEL property key.
+
+        This implementation considers only the portion before the first ':' to avoid
+        including the telephone value in the parsed types. It supports:
+            - TYPE=comma,separated values
+            - flag-style parameters (e.g. TEL;HOME:...)
+            - preserving raw values for malformed TYPE values (e.g. TYPE=HOME=WORK)
+
+        :param key: TEL property key
+        :type key: str
+        :return: List of telephone types
+        :rtype: list[str]
+        """
+
+        if not key:
+            return []
+
+        # Consider only the portion before the first colon
+        params_part = key.split(":", 1)[0]
+
+        # Split off the property name (e.g. "TEL") and keep parameters
+        tokens = params_part.split(";")
+        if len(tokens) <= 1:
+            return []
+
+        params = tokens[1:]
+        types: list[str] = []
+
+        for p in params:
+            p = p.strip()
+
+            if not p:
+                continue
+
+            if "=" in p:
+                param_name, param_value = p.split("=", 1)
+
+                if param_name.strip().upper() == "TYPE":
+                    for t in param_value.split(","):
+                        t_clean = t.strip().lower()
+
+                        if t_clean:
+                            types.append(t_clean)
+            else:
+                # flag-style parameter (e.g. HOME, WORK)
+                types.append(p.lower())
+
+        return types
+
+    @staticmethod
+    def _unfold_lines(
+        lines_list: list[str], prop_pattern: re.Pattern[str]
+    ) -> list[str]:
+        """
+        Unfolds folded lines in a vCard according to RFC 6350.
+
+        :param lines_list: List of vCard lines
+        :type lines_list: list[str]
+        :param prop_pattern: Compiled regex pattern to identify property lines
+        :type prop_pattern: re.Pattern[str]
+        :return: List of unfolded vCard lines
+        :rtype: list[str]
+        """
+
+        unfolded_local: list[str] = []
+
+        for ln in lines_list:
+            if not ln:
+                continue
+
+            if ln[0] in (" ", "\t") and unfolded_local:
+                cont = ln[1:]
+
+                if prop_pattern.match(cont):
+                    unfolded_local.append(cont)
+                    continue
+
+                prev = unfolded_local[-1]
+                prev_key = prev.split(":", 1)[0]
+                prev_prop = prev_key.split(";", 1)[0].upper().strip()
+
+                if prev_prop == "TEL":
+                    unfolded_local[-1] += cont
+                else:
+                    if not prev.endswith(" ") and not cont.startswith(" "):
+                        unfolded_local[-1] += " " + cont
+                    else:
+                        unfolded_local[-1] += cont
+            else:
+                unfolded_local.append(ln)
+
+        return unfolded_local
+
+    @staticmethod
+    def _parse_vcard(vcard: str) -> tuple[str, list[tuple[str, list[str]]]]:
         """
         Parses a vCard string to extract the full name and telephone numbers with types.
 
@@ -126,43 +220,16 @@ class NextcloudWebDAVClient:
 
         # Normalize line endings and split
         lines = vcard.replace("\r\n", "\n").replace("\r", "\n").split("\n")
-        # Unfold folded lines (lines that start with space or tab are continuations),
-        # but if a continuation looks like a new property (e.g. "TEL;...:"), treat it as a separate line.
-        unfolded = []
         prop_pattern = re.compile(r"^[A-Za-z0-9\-]+(?:;.*)?:")  # matches "PROP[:|;...]"
 
-        for line in lines:
-            if not line:
-                continue
-
-            if line[0] in (" ", "\t") and unfolded:
-                cont = line[1:]
-
-                if prop_pattern.match(cont):
-                    # Continuation actually looks like a property -> add as new line
-                    unfolded.append(cont)
-                else:
-                    # Decide whether to insert a space when unfolding based on the previous property
-                    prev = unfolded[-1]
-                    prev_key = prev.split(":", 1)[0]
-                    prev_prop = prev_key.split(";", 1)[0].upper().strip()
-
-                    if prev_prop == "TEL":
-                        # Phone numbers should be concatenated without spaces
-                        unfolded[-1] += cont
-                    else:
-                        # For textual properties (like FN) insert a space if appropriate
-                        if not prev.endswith(" ") and not cont.startswith(" "):
-                            unfolded[-1] += " " + cont
-                        else:
-                            unfolded[-1] += cont
-            else:
-                unfolded.append(line)
+        unfolded = NextcloudWebDAVClient._unfold_lines(lines, prop_pattern)
 
         name = "Unknown"
-        numbers = []
+        numbers: list[tuple[str, list[str]]] = []
+        prefix = None
+        fn_value = None
 
-        for line in unfolded:  # pylint: disable=too-many-nested-blocks
+        for line in unfolded:
             if ":" not in line:
                 continue
 
@@ -170,36 +237,32 @@ class NextcloudWebDAVClient:
             prop = key.split(";", 1)[0].upper().strip()
 
             if prop == "FN":
-                name = value.strip() or "Unknown"
-            elif prop == "TEL":
+                fn_value = value.strip() or "Unknown"
+
+                continue
+
+            if prop == "N":
+                parts = value.split(";")
+
+                if len(parts) >= 4 and parts[3].strip():
+                    prefix = parts[3].strip()
+
+                continue
+
+            if prop == "TEL":
                 val = value.strip()
 
                 if not val:
-                    # skip empty telephone values
                     continue
 
-                types = []
-
-                if ";" in key:
-                    params = key.split(";")[1:]
-
-                    for p in params:
-                        if "=" in p:
-                            k, v = p.split("=", 1)
-
-                            if k.strip().upper() == "TYPE":
-                                types.extend(
-                                    [
-                                        t.strip().lower()
-                                        for t in v.split(",")
-                                        if t.strip()
-                                    ]
-                                )
-                        else:
-                            if p.strip():
-                                types.append(p.strip().lower())
-
+                types = NextcloudWebDAVClient._extract_tel_types(key)
                 numbers.append((val, types))
+
+        if fn_value:
+            name = fn_value
+
+            if prefix:
+                name = f"{prefix} {name}"
 
         return name, numbers
 
