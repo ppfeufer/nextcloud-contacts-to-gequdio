@@ -21,7 +21,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 # Nextcloud Contacts to GEQUDIO
-from nextcloud_contacts_to_gequdio import __version__
+from nextcloud_contacts_to_gequdio import __github_repo__, __version__
 
 
 def load_settings(path: str) -> dict:
@@ -108,7 +108,7 @@ class NextcloudWebDAVClient:
 
         return (
             f"NextcloudContactsToGEQUDIO/{__version__} "
-            f"(+https://github.com/ppfeufer/nextcloud-contacts-to-gequdio) via python-requests/{requests.__version__}"
+            f"(+{__github_repo__}) via python-requests/{requests.__version__}"
         )
 
     @staticmethod
