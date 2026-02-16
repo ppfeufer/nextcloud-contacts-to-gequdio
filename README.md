@@ -25,10 +25,6 @@ ______________________________________________________________________
 
 ## Installation and Usage<a name="installation-and-usage"></a>
 
-- Clone this repository via Git:
-  ```bash
-  git clone https://github.com/ppfeufer/nextcloud-contacts-to-gequdio.git
-  ```
 - Ensure you have Python 3.10 or higher installed on your system.
 - Create a virtual environment and activate it:
   ```bash
