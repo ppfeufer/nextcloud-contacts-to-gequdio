@@ -11,7 +11,9 @@ Requirements:
 
 # Standard Library
 import configparser
+import os
 import re
+import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from urllib.parse import urljoin
@@ -381,9 +383,22 @@ class NextcloudWebDAVClient:
         return xml_str
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Main function to execute the Nextcloud to GEQUDIO conversion process.
+
+    :return:
+    :rtype:
+    """
+
+    # The first entry in sys.path is usually the python executable directory in the venv.
+    venv_path = sys.path[0]
+    if venv_path.endswith(os.path.sep + "bin"):
+        venv_path = str(Path(venv_path).parent)
+
     # Load settings from INI file
-    cfg = load_settings(str(Path(__file__).parent / "settings.ini"))
+    settings_path = Path(venv_path).parent / "settings.ini"
+    cfg = load_settings(str(settings_path))
 
     client = NextcloudWebDAVClient(
         url=cfg["url"],
@@ -396,6 +411,10 @@ if __name__ == "__main__":
 
     print(f"Fetched {len(contacts)} contacts from Nextcloud.\n")
 
-    gequdio_xml = client.create_gequdio_contact_xml(
-        contacts, write_path=str(Path(__file__).parent / "gequdio.xml")
+    client.create_gequdio_contact_xml(
+        contacts, write_path=str(Path(venv_path).parent / "gequdio.xml")
     )
+
+
+if __name__ == "__main__":
+    main()

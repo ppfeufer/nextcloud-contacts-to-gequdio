@@ -36,6 +36,14 @@ Section Order:
 
 <!-- Your changes go here -->
 
+## [2.0.0] - 2026-02-16
+
+### Changed
+
+- Added executable script entry point in `pyproject.toml` for easier usage. Now you
+  can run the tool directly from the venv bin directory via
+  `/path/to/your/venv/bin/nextcloud-contacts-to-gequdio`.
+
 ## [1.2.0] - 2026-01-14
 
 ### Added
@@ -93,6 +101,7 @@ Section Order:
 [1.1.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.0.0...v1.1.0 "v1.1.0"
 [1.1.1]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.1.0...v1.1.1 "v1.1.1"
 [1.2.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.1.1...v1.2.0 "v1.2.0"
-[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.2.0...HEAD "In Development"
+[2.0.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.2.0...v2.0.0 "v2.0.0"
+[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.0.0...HEAD "In Development"
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/ "Keep a Changelog"
 [semantic versioning]: https://semver.org/spec/v2.0.0.html "Semantic Versioning"

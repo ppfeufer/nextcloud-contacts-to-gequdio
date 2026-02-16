@@ -68,6 +68,7 @@ prepare-release:
 		echo "$(TEXT_COLOR_YELLOW)$(TEXT_BOLD)Release Candidate$(TEXT_RESET) version detected!"; \
 	else \
 		echo "$(TEXT_BOLD)Release$(TEXT_BOLD_END) version detected."; \
+		sed -i -E "/$(appname)==/s/==.*/==$$new_version/" README.md; \
 		sed -i -E "\|\[in development\]\: |s|\]\: .*|\]\: $(git_repository)/compare/v$$new_version...HEAD \"In Development\"|g" CHANGELOG.md; \
 		echo "Updated version in $(TEXT_BOLD)README.md$(TEXT_BOLD_END)"; \
 	fi;
