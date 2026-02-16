@@ -38,6 +38,7 @@ optional-dependencies.tests = [
     "pytest>=7",
     "pytest-cov",
 ]
+scripts.nextcloud-contacts-to-gequdio = "nextcloud_contacts_to_gequdio.nextcloud_to_gequdio:main"
 
 [tool.hatch.build]
 include = [

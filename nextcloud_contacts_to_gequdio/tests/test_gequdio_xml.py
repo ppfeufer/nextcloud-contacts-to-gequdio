@@ -2,7 +2,7 @@
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from unittest.mock import ANY, Mock
+from unittest.mock import ANY, MagicMock, Mock, patch
 
 # Third Party
 import pytest
@@ -13,6 +13,7 @@ from nextcloud_contacts_to_gequdio import __version__
 from nextcloud_contacts_to_gequdio.nextcloud_to_gequdio import (
     NextcloudWebDAVClient,
     load_settings,
+    main,
 )
 
 
@@ -1191,3 +1192,149 @@ class TestNextcloudWebDAVClientHelperUnfoldLines:
         unfolded = NextcloudWebDAVClient._unfold_lines(lines, pattern)
 
         assert unfolded == ["TEL;TYPE=work:123456"]
+
+
+class TestMain:
+    """
+    Test cases for the main function.
+    """
+
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.load_settings")
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.NextcloudWebDAVClient")
+    @patch(
+        "nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.sys.path",
+        ["/path/to/venv/bin"],
+    )
+    def test_executes_successfully_with_valid_settings_and_contacts(
+        self, mock_client_class, mock_load_settings
+    ):
+        mock_load_settings.return_value = {
+            "url": "https://example.com",
+            "username": "user",
+            "password": "pass",
+            "addressbook": "contacts",
+        }
+        mock_client = MagicMock()
+        mock_client.download_all_contacts.return_value = ["vCard1", "vCard2"]
+        mock_client_class.return_value = mock_client
+
+        main()
+
+        mock_load_settings.assert_called_once_with("/path/to/settings.ini")
+        mock_client_class.assert_called_once_with(
+            url="https://example.com",
+            username="user",
+            password="pass",
+            addressbook="contacts",
+        )
+        mock_client.download_all_contacts.assert_called_once()
+        mock_client.create_gequdio_contact_xml.assert_called_once_with(
+            ["vCard1", "vCard2"], write_path="/path/to/gequdio.xml"
+        )
+
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.load_settings")
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.NextcloudWebDAVClient")
+    @patch(
+        "nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.sys.path",
+        ["/path/to/venv/bin"],
+    )
+    def test_raises_error_when_settings_file_is_missing(
+        self, mock_client_class, mock_load_settings
+    ):
+        mock_load_settings.side_effect = FileNotFoundError("Settings file not found")
+
+        with pytest.raises(FileNotFoundError, match="Settings file not found"):
+            main()
+
+        mock_load_settings.assert_called_once_with("/path/to/settings.ini")
+        mock_client_class.assert_not_called()
+
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.load_settings")
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.NextcloudWebDAVClient")
+    @patch(
+        "nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.sys.path",
+        ["/path/to/venv/bin"],
+    )
+    def test_raises_error_when_settings_file_is_invalid(
+        self, mock_client_class, mock_load_settings
+    ):
+        mock_load_settings.side_effect = KeyError("Missing 'nextcloud' section")
+
+        with pytest.raises(KeyError, match="Missing 'nextcloud' section"):
+            main()
+
+        mock_load_settings.assert_called_once_with("/path/to/settings.ini")
+        mock_client_class.assert_not_called()
+
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.load_settings")
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.NextcloudWebDAVClient")
+    @patch(
+        "nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.sys.path",
+        ["/path/to/venv/bin"],
+    )
+    def test_handles_no_contacts_fetched_gracefully(
+        self, mock_client_class, mock_load_settings
+    ):
+        mock_load_settings.return_value = {
+            "url": "https://example.com",
+            "username": "user",
+            "password": "pass",
+            "addressbook": "contacts",
+        }
+        mock_client = MagicMock()
+        mock_client.download_all_contacts.return_value = []
+        mock_client_class.return_value = mock_client
+
+        main()
+
+        mock_load_settings.assert_called_once_with("/path/to/settings.ini")
+        mock_client.download_all_contacts.assert_called_once()
+        mock_client.create_gequdio_contact_xml.assert_called_once_with(
+            [], write_path="/path/to/gequdio.xml"
+        )
+
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.load_settings")
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.NextcloudWebDAVClient")
+    @patch(
+        "nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.sys.path",
+        ["/path/to/venv/bin"],
+    )
+    def test_resolves_venv_path_correctly_when_sys_path_points_to_bin_directory(
+        self, mock_client_class, mock_load_settings
+    ):
+        mock_load_settings.return_value = {
+            "url": "https://example.com",
+            "username": "user",
+            "password": "pass",
+            "addressbook": "contacts",
+        }
+        mock_client = MagicMock()
+        mock_client.download_all_contacts.return_value = []
+        mock_client_class.return_value = mock_client
+
+        main()
+
+        mock_load_settings.assert_called_once_with("/path/to/settings.ini")
+
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.load_settings")
+    @patch("nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.NextcloudWebDAVClient")
+    @patch(
+        "nextcloud_contacts_to_gequdio.nextcloud_to_gequdio.sys.path",
+        ["/path/to/venv"],
+    )
+    def test_resolves_venv_path_correctly_when_sys_path_points_to_venv_directory(
+        self, mock_client_class, mock_load_settings
+    ):
+        mock_load_settings.return_value = {
+            "url": "https://example.com",
+            "username": "user",
+            "password": "pass",
+            "addressbook": "contacts",
+        }
+        mock_client = MagicMock()
+        mock_client.download_all_contacts.return_value = []
+        mock_client_class.return_value = mock_client
+
+        main()
+
+        mock_load_settings.assert_called_once_with("/path/to/settings.ini")
