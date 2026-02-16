@@ -1,5 +1,6 @@
 # Convert Nextcloud Contacts to GEQUDIO XML
 
+[![Version](https://img.shields.io/pypi/v/nextcloud-contacts-to-gequdio?label=release)](https://pypi.org/project/nextcloud-contacts-to-gequdio/)
 [![License](https://img.shields.io/github/license/ppfeufer/nextcloud-contacts-to-gequdio)](https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/blob/master/LICENSE)
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/ppfeufer/nextcloud-contacts-to-gequdio/master.svg)](https://results.pre-commit.ci/latest/github/ppfeufer/nextcloud-contacts-to-gequdio/master)
@@ -33,7 +34,7 @@ ______________________________________________________________________
   ```
 - Install the package using pip:
   ```bash
-  pip install nextcloud-contacts-to-gequdio==2.0.0
+  pip install nextcloud-contacts-to-gequdio==2.0.1
   ```
 - Copy the settings file and modify it with your details:
   ```bash
