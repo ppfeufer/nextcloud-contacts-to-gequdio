@@ -36,6 +36,12 @@ Section Order:
 
 <!-- Your changes go here -->
 
+## [2.0.1] - 2026-02-16
+
+### Fixed
+
+- Install instructions in README
+
 ## [2.0.0] - 2026-02-16
 
 ### Changed
@@ -102,6 +108,7 @@ Section Order:
 [1.1.1]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.1.0...v1.1.1 "v1.1.1"
 [1.2.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.1.1...v1.2.0 "v1.2.0"
 [2.0.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.2.0...v2.0.0 "v2.0.0"
-[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.0.0...HEAD "In Development"
+[2.0.1]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.0.0...v2.0.1 "v2.0.1"
+[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.0.1...HEAD "In Development"
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/ "Keep a Changelog"
 [semantic versioning]: https://semver.org/spec/v2.0.0.html "Semantic Versioning"
