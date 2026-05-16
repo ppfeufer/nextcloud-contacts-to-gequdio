@@ -880,6 +880,90 @@ class TestNextcloudWebDAVClientCreateGequdioContactXML:
 
         assert output_path.read_text(encoding="utf-8").startswith('<?xml version="1.0"')
 
+    def test_creates_multiple_tag_elements_for_multiple_numbers_of_same_type(self):
+        """
+        Test that multiple TEL entries of the same type create multiple tag elements
+        and that both normalized numbers appear in the output XML.
+
+        :return:
+        :rtype:
+        """
+
+        client = NextcloudWebDAVClient(
+            url="https://example.com",
+            username="user",
+            password="pass",
+            addressbook="contacts",
+        )
+
+        vcards = [
+            "BEGIN:VCARD\nFN:John Doe\nTEL;TYPE=WORK:+123456789\nTEL;TYPE=WORK:+987654321\nEND:VCARD",
+        ]
+
+        xml_output = client.create_gequdio_contact_xml(vcards)
+        root = ET.fromstring(xml_output)
+
+        telephones = root.findall(".//DirectoryEntry/Telephone")
+        values = [el.text for el in telephones]
+
+        assert values.count("00123456789") == 1
+        assert values.count("00987654321") == 1
+        assert len(telephones) == 2
+
+    def test_populates_existing_empty_tag_without_creating_duplicate_for_single_number(
+        self,
+    ):
+        """
+        Test that when there is a single TEL entry of a given type the client
+        populates the existing tag (no duplicates are created).
+
+        :return:
+        :rtype:
+        """
+
+        client = NextcloudWebDAVClient(
+            url="https://example.com",
+            username="user",
+            password="pass",
+            addressbook="contacts",
+        )
+
+        vcards = [
+            "BEGIN:VCARD\nFN:John Doe\nTEL;TYPE=WORK:+1 (234) 567-890\nEND:VCARD",
+        ]
+
+        xml_output = client.create_gequdio_contact_xml(vcards)
+        root = ET.fromstring(xml_output)
+
+        telephones = root.findall(".//DirectoryEntry/Telephone")
+
+        assert len(telephones) == 1
+        assert telephones[0].text == "001234567890"
+
+    def test_preserves_asterisk_in_phone_numbers(self):
+        """
+        Test that '*' characters in phone numbers are preserved while other
+        non-numeric characters are removed and international '+' is normalized.
+
+        :return:
+        :rtype:
+        """
+
+        client = NextcloudWebDAVClient(
+            url="https://example.com",
+            username="user",
+            password="pass",
+            addressbook="contacts",
+        )
+
+        vcards = [
+            "BEGIN:VCARD\nFN:John Doe\nTEL;TYPE=WORK:+44 123*456-78\nEND:VCARD",
+        ]
+
+        xml_output = client.create_gequdio_contact_xml(vcards)
+
+        assert "<Telephone>0044123*45678</Telephone>" in xml_output
+
 
 class TestNextcloudWebDAVClientHelperExtractTelTypes:
     """
