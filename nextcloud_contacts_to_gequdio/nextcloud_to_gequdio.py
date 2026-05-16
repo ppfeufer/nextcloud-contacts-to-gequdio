@@ -37,15 +37,15 @@ def load_settings(path: str) -> dict:
     """
 
     config = configparser.ConfigParser()
-    path = Path(path)
+    settings_file = Path(path)
 
-    if not path.exists():
-        raise FileNotFoundError(f"Settings file not found: {path}")
+    if not settings_file.exists():
+        raise FileNotFoundError(f"Settings file not found: {settings_file}")
 
-    config.read(path)
+    config.read(settings_file)
 
     if "nextcloud" not in config:
-        raise KeyError(f"Missing 'nextcloud' section in {path}")
+        raise KeyError(f"Missing 'nextcloud' section in {settings_file}")
 
     section = config["nextcloud"]
 

@@ -1026,7 +1026,7 @@ class TestNextcloudWebDAVClientHelperExtractTelTypes:
 
         assert types == []
 
-    def rtest_eturns_empty_list_when_key_is_none(self):
+    def test_eturns_empty_list_when_key_is_none(self):
         """
         Test that _extract_tel_types returns an empty list when key is None.
 
@@ -1036,7 +1036,9 @@ class TestNextcloudWebDAVClientHelperExtractTelTypes:
 
         key = None
 
-        types = NextcloudWebDAVClient._extract_tel_types(key)
+        types = NextcloudWebDAVClient._extract_tel_types(
+            key  # pyrefly: ignore [bad-argument-type]
+        )
 
         assert types == []
 
