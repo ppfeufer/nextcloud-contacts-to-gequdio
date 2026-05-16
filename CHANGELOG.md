@@ -36,6 +36,10 @@ Section Order:
 
 <!-- Your changes go here -->
 
+### Fixed
+
+- Bad variable assignment (`Path` is not assignable to variable `path` with type `str`)
+
 ## [2.0.1] - 2026-02-16
 
 ### Fixed
