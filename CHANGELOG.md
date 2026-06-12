@@ -36,6 +36,10 @@ Section Order:
 
 <!-- Your changes go here -->
 
+### Added
+
+- Python 3.14 compatibility/support
+
 ## [2.0.2] - 2026-05-16
 
 ### Fixed
