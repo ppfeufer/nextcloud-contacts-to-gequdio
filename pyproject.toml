@@ -34,7 +34,8 @@ dynamic = [
 dependencies = [
     "requests",
 ]
-optional-dependencies.tests = [
+optional-dependencies.development = [
+    "black",
     "coverage",
     "pytest>=7",
     "pytest-cov",

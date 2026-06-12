@@ -1,7 +1,7 @@
 
 PHONY: coverage.xml
 coverage: check-python-venv
-	@echo "Running tests under coverage for $(appname_verbose) …"
+	@echo "Running tests under coverage for $(TEXT_BOLD)$(appname_verbose)$(TEXT_BOLD_END)…"
 	@coverage run -m pytest --ignore=tests nextcloud_contacts_to_gequdio; \
 	coverage xml -o coverage.xml; \
 	coverage html -d htmlcov; \

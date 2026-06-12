@@ -49,7 +49,7 @@ confirm:
 # Update the graph of the models, translation files and the version in the package
 .PHONY: prepare-release
 prepare-release:
-	@echo "Preparing a release …"
+	@echo "Preparing a release…"
 	@read -p "New Version Number: " new_version; \
 	if ! grep -qE "^## \[$$new_version\]" CHANGELOG.md; then \
 		previos_version=$$(grep -m 1 -E '^## \[[0-9]+(\.[0-9]+){0,2}\] - ' CHANGELOG.md | sed -E 's/^## \[([0-9]+(\.[0-9]+){0,2})\].*$$/\1/');  \
@@ -75,13 +75,13 @@ prepare-release:
 
 PHONY: run
 run: check-python-venv
-	@echo "Running $(appname_verbose) …"
+	@echo "Running $(TEXT_BOLD)$(appname_verbose)$(TEXT_BOLD_END)…"
 	@python -m nextcloud_contacts_to_gequdio.nextcloud_to_gequdio
 
 PHONY: dev-install
 dev-install: check-python-venv
-	@echo "Installing $(appname_verbose) in development mode …"
-	@pip install -e .[tests]
+	@echo "Installing $(TEXT_BOLD)$(appname_verbose)$(TEXT_BOLD_END) for development…"
+	@pip install -e .[development]
 
 # Help
 .PHONY: help
