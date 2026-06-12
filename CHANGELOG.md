@@ -36,6 +36,8 @@ Section Order:
 
 <!-- Your changes go here -->
 
+## [3.0.0] - 2026-06-12
+
 ### Added
 
 - Python 3.14 compatibility/support
@@ -120,6 +122,7 @@ Section Order:
 [2.0.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v1.2.0...v2.0.0 "v2.0.0"
 [2.0.1]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.0.0...v2.0.1 "v2.0.1"
 [2.0.2]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.0.1...v2.0.2 "v2.0.2"
-[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.0.2...HEAD "In Development"
+[3.0.0]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v2.0.2...v3.0.0 "v3.0.0"
+[in development]: https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/compare/v3.0.0...HEAD "In Development"
 [keep a changelog]: https://keepachangelog.com/en/1.0.0/ "Keep a Changelog"
 [semantic versioning]: https://semver.org/spec/v2.0.0.html "Semantic Versioning"

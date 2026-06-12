@@ -34,7 +34,7 @@ ______________________________________________________________________
   ```
 - Install the package using pip:
   ```bash
-  pip install nextcloud-contacts-to-gequdio==2.0.2
+  pip install nextcloud-contacts-to-gequdio==3.0.0
   ```
 - Copy the settings file and modify it with your details:
   ```bash
