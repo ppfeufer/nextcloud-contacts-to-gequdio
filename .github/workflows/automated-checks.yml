@@ -24,7 +24,7 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run Pre Commit Checks
         uses: pre-commit/action@v3.0.1
@@ -48,7 +48,7 @@ jobs:
     steps:
       # Checkout the repository
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Set up Python
       - name: Setup Python ${{ matrix.python-version }}
