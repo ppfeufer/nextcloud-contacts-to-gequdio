@@ -11,9 +11,6 @@ appname_verbose = Nextcloud Contacts to GEQUDIO
 git_repository = https://github.com/ppfeufer/$(appname)
 git_repository_issues = $(git_repository)/issues
 
-# Set myauth path or default to ../myauth if config file (.make/myauth-path) does not exist
-myauth_path = $(shell path=$$(cat .make/myauth-path 2>/dev/null | grep . || echo "../myauth"); echo "$${path%/}")
-
 # Default goal
 .DEFAULT_GOAL := help
 
@@ -88,7 +85,6 @@ dev-install: check-python-venv
 help::
 	@echo ""
 	@echo "$(TEXT_BOLD)$(appname_verbose)$(TEXT_BOLD_END) Makefile"
-	@echo "('myauth_path' is set to '$(myauth_path)')"
 	@echo ""
 	@echo "$(TEXT_BOLD)Usage:$(TEXT_BOLD_END)"
 	@echo "  make [command]"
