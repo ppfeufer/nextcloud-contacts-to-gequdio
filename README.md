@@ -2,6 +2,7 @@
 
 [![Version](https://img.shields.io/pypi/v/nextcloud-contacts-to-gequdio?label=release)](https://pypi.org/project/nextcloud-contacts-to-gequdio/)
 [![License](https://img.shields.io/github/license/ppfeufer/nextcloud-contacts-to-gequdio)](https://github.com/ppfeufer/nextcloud-contacts-to-gequdio/blob/master/LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/nextcloud-contacts-to-gequdio)](https://pypi.org/project/nextcloud-contacts-to-gequdio/)
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/ppfeufer/nextcloud-contacts-to-gequdio/master.svg)](https://results.pre-commit.ci/latest/github/ppfeufer/nextcloud-contacts-to-gequdio/master)
 [![Code Style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](http://black.readthedocs.io/en/latest/)
