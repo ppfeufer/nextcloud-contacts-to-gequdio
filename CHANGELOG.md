@@ -36,6 +36,10 @@ Section Order:
 
 <!-- Your changes go here -->
 
+### Removed
+
+- Support for Python 3.10 and 3.11
+
 ## [3.0.0] - 2026-06-12
 
 ### Added
