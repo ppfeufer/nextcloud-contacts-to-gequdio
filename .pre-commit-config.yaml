@@ -203,7 +203,7 @@ repos:
         name: Blacken docs
         description: Format Python code in documentation files.
         additional_dependencies:
-          - black==26.10.0  # https://github.com/psf/black/releases/latest
+          - black==26.10.1  # https://github.com/psf/black/releases/latest
         args:
           - --target-version=py312  # Minimum required Python version
 
